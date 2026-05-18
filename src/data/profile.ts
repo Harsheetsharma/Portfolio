@@ -160,13 +160,13 @@ export const experience = [
 export const testimonials = [
   {
     quote:
-      "Harsheet writes like someone who has already had to debug the failure modes. His backend thinking is unusually mature.",
+      "Most of my work revolves around queues, transactional flows, concurrency handling, caching, and real-time systems.",
     name: "Engineering Review Note",
     role: "Open-source contribution feedback",
   },
   {
     quote:
-      "The strongest signal is the taste for correctness: transactional APIs, queue recovery, and clean boundaries.",
+      "Built backend systems around clean boundaries, observability, and predictable scaling.",
     name: "Portfolio Signal",
     role: "Technical positioning",
   },
