@@ -16,21 +16,6 @@ This project basically shows my backend-focused engineering depth of knowledge, 
 - lucide-react icons
 - pnpm
 
-## Features
-
-<!-- - Cinematic loading sequence
-- Interactive custom cursor
-- Lenis smooth scrolling
-- GSAP scroll-triggered parallax and pinned horizontal project section
-- Framer Motion reveal, hover, stagger, marquee, and micro-interactions
-- Animated role switching
-- Premium hero with interactive background, particles/grid/noise treatment, and magnetic CTAs
-- Data-driven About, Skills, Experience, Projects, GitHub, Testimonials, Contact, and Footer sections
-- Dynamic GitHub repository cards from the public GitHub API
-- Contribution-graph style visual and language usage animation
-- Accessible semantic layout, keyboard-friendly links/forms, and reduced-motion support
-- JSON-LD Person schema, Open Graph metadata, robots metadata, and optimized static rendering -->
-
 ## Getting Started
 
 ```bash
