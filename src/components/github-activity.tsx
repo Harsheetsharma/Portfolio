@@ -16,24 +16,78 @@ type GitHubRepo = {
   stargazers_count: number;
   forks_count: number;
   updated_at: string;
+  fork: boolean;
+  commit_count: number;
 };
 
 export function GitHubActivity() {
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const featuredRepos = [
+    "distributed-job-queue",
+    "realtime-chat",
+    "payment-engine",
+  ];
   useEffect(() => {
     let mounted = true;
 
     async function loadRepos() {
       try {
         const response = await fetch(
-          `https://api.github.com/users/${profile.handle}/repos?sort=updated&per_page=6`,
+          `https://api.github.com/users/${profile.handle}/repos?per_page=100`,
           { next: { revalidate: 3600 } },
         );
         if (!response.ok) throw new Error("GitHub request failed");
         const data = (await response.json()) as GitHubRepo[];
-        if (mounted) setRepos(data.filter((repo) => !repo.name.includes(".github")).slice(0, 6));
+
+        const filteredRepo = data
+          .filter((repo) => !repo.fork)
+          .filter((repo) => !repo.name.includes(".github"));
+
+        const reposWithCommits = await Promise.all(
+          filteredRepo.map(async (repo) => {
+            try {
+              const commitsRes = await fetch(
+                `https://api.github.com/repos/${profile.handle}/${repo.name}/commits?per_page=1`,
+              );
+              const linkHeader = commitsRes.headers.get("Link");
+
+              let commitCount = 1;
+
+              if (linkHeader) {
+                const match = linkHeader.match(/page=(\d+)>; rel="last"/);
+
+                if (match) {
+                  commitCount = parseInt(match[1], 10);
+                }
+              }
+
+              return {
+                ...repo,
+                commitCount,
+              };
+            } catch {
+              return {
+                ...repo,
+                commitCount: 0,
+              };
+            }
+          }),
+        );
+
+        const sorted = reposWithCommits
+          .sort((a, b) => (b.commitCount ?? 0) - (a.commitCount ?? 0))
+          .slice(0, 6);
+
+        if (mounted)
+          setRepos(
+            // data
+            //   .filter((repo) => !repo.name.includes(".github"))
+            //   .filter((repo) => !repo.fork)
+            //   .slice(0, 6),
+            sorted,
+          );
       } catch {
         if (mounted) setRepos([]);
       } finally {
@@ -63,14 +117,19 @@ export function GitHubActivity() {
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
             <p className="eyebrow">Live GitHub Pulse</p>
-            <h3 className="mt-3 text-2xl font-semibold text-white">Contribution Field</h3>
+            <h3 className="mt-3 text-2xl font-semibold text-white">
+              Contribution Field
+            </h3>
           </div>
           <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs text-emerald-100">
             dynamic
           </span>
         </div>
 
-        <div className="grid grid-cols-14 gap-1.5" aria-label="Contribution-style activity graph">
+        <div
+          className="grid grid-cols-14 gap-1.5"
+          aria-label="Contribution-style activity graph"
+        >
           {githubContributionSeed.map((cell) => (
             <motion.span
               key={cell.id}
@@ -80,7 +139,8 @@ export function GitHubActivity() {
                 cell.level === 1 && "bg-cyan-400/20",
                 cell.level === 2 && "bg-cyan-300/35",
                 cell.level === 3 && "bg-emerald-300/45",
-                cell.level === 4 && "bg-fuchsia-300/55 shadow-[0_0_18px_rgba(217,70,239,0.18)]",
+                cell.level === 4 &&
+                  "bg-fuchsia-300/55 shadow-[0_0_18px_rgba(217,70,239,0.18)]",
               )}
               whileHover={{ scale: 1.8, zIndex: 5 }}
               transition={{ type: "spring", stiffness: 420, damping: 20 }}
@@ -119,7 +179,10 @@ export function GitHubActivity() {
         <AnimatePresence mode="popLayout">
           {loading
             ? Array.from({ length: 3 }).map((_, index) => (
-                <div className="panel h-32 animate-pulse bg-white/[0.04]" key={index} />
+                <div
+                  className="panel h-32 animate-pulse bg-white/[0.04]"
+                  key={index}
+                />
               ))
             : repos.map((repo, index) => (
                 <motion.a
@@ -135,15 +198,22 @@ export function GitHubActivity() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-white">{repo.name}</h3>
+                      <h3 className="text-lg font-semibold text-white">
+                        {repo.name}
+                      </h3>
                       <p className="mt-2 line-clamp-2 text-sm leading-6 text-white/55">
-                        {repo.description ?? "Latest public repository from Harsheet's GitHub profile."}
+                        {repo.description ??
+                          "Latest public repository from Harsheet's GitHub profile."}
                       </p>
                     </div>
                     <ExternalLink className="size-4 shrink-0 text-white/35 transition group-hover:text-cyan-200" />
                   </div>
                   <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-white/45">
-                    {repo.language && <span className="rounded-full bg-white/10 px-3 py-1">{repo.language}</span>}
+                    {repo.language && (
+                      <span className="rounded-full bg-white/10 px-3 py-1">
+                        {repo.language}
+                      </span>
+                    )}
                     <span className="inline-flex items-center gap-1">
                       <Star className="size-3.5" /> {repo.stargazers_count}
                     </span>
